@@ -1,264 +1,242 @@
-IEEE ML Challenge – Fault Detection Using XGBoost
-Executive Summary
+# IEEE ML Challenge – Fault Detection Using XGBoost
 
-This project addresses a binary classification problem from the IEEE ML Challenge, where the objective is to classify system instances as either Normal (0) or Faulty (1) based on 47 numerical features (F01–F47). The dataset contains 43,776 training samples with a slight class imbalance (approximately 60% normal and 40% faulty).
+---
 
-To solve this problem, a robust machine learning pipeline was developed using XGBoost, combined with Stratified K-Fold Cross-Validation and global threshold optimization to maximize F1-score performance. Special attention was given to handling class imbalance, preventing data leakage, and ensuring reliable validation through out-of-fold predictions.
+## Executive Summary
 
-The final solution includes:
+This project addresses a binary classification problem from the IEEE ML Challenge. The objective is to classify system instances as either **Normal (0)** or **Faulty (1)** using 47 numerical input features (F01–F47).
 
-Cross-validated model training
+The dataset contains 43,776 training samples with a slight class imbalance (approximately 60% Normal and 40% Faulty).
 
-Imbalance handling using scale_pos_weight
+To solve this problem, a structured machine learning pipeline was developed using **XGBoost**, combined with **Stratified K-Fold Cross-Validation** and **global threshold optimization** to maximize performance.  
 
-Global threshold tuning
+Special care was taken to:
+- Handle class imbalance properly  
+- Prevent data leakage  
+- Ensure reliable cross-validation  
+- Optimize the classification threshold  
+- Generate a correctly formatted submission file  
 
-Final training on the full dataset
+This approach ensures strong generalization performance and aligns with machine learning competition best practices.
 
-Properly formatted prediction file generation for submission
+---
 
-This approach ensures high generalization performance and aligns with competition evaluation standards.
+# Detailed Project Documentation
 
-Detailed Project Documentation
-1. Problem Statement
+---
 
-The task is a supervised binary classification problem:
+## 1. Problem Statement
 
-Input: 47 numerical features (F01–F47)
+This is a supervised binary classification problem.
 
-Target variable: Class
+**Input:**
+- 47 numerical features (F01–F47)
 
-0 → Normal
+**Target Variable:**
+- `Class`
+  - 0 → Normal
+  - 1 → Faulty
 
-1 → Faulty
+**Dataset Characteristics:**
+- 43,776 training samples  
+- Slight class imbalance (~60:40)  
 
-Training samples: 43,776
+The objective is to build a model that accurately predicts whether a system instance is faulty.
 
-Slight class imbalance (~60:40)
+---
 
-The goal is to build a model that accurately predicts whether a given system instance is faulty.
+## 2. Dataset Understanding
 
-2. Understanding the Dataset
-2.1 Feature Characteristics
+### 2.1 Feature Characteristics
 
-All features are numerical.
+- All features are numerical.
+- No categorical encoding was required.
+- No missing values were present.
+- Feature scaling was not necessary because tree-based models were used.
 
-No categorical encoding was required.
+### 2.2 Target Distribution
 
-No missing values were observed.
+The dataset has mild class imbalance:
+- Majority class: Normal  
+- Minority class: Faulty  
 
-Feature scaling was not necessary due to tree-based modeling.
+Although the imbalance is not extreme, it can bias the model toward predicting the majority class. Therefore, it was addressed during model training.
 
-2.2 Target Distribution
+---
 
-The dataset has mild imbalance:
+## 3. Modeling Approach
 
-Majority class: Normal
-
-Minority class: Faulty
-
-Although not extreme, this imbalance can bias the model toward predicting the majority class. Therefore, it was handled carefully.
-
-3. Approach and Methodology
-3.1 Why XGBoost?
+### Why XGBoost?
 
 XGBoost was selected because:
 
-It performs exceptionally well on structured/tabular data.
+- It performs exceptionally well on structured/tabular datasets.
+- It captures complex non-linear feature interactions.
+- It includes built-in regularization mechanisms.
+- It handles class imbalance effectively.
+- It is widely used in machine learning competitions.
 
-It captures non-linear feature interactions.
+Compared to Random Forest, XGBoost provides:
+- Better generalization through boosting  
+- Stronger regularization  
+- Higher predictive performance on complex patterns  
 
-It is robust to feature scaling.
+---
 
-It includes built-in mechanisms for handling imbalance.
+## 4. Training Strategy
 
-It is widely used in machine learning competitions.
-
-Compared to Random Forest, XGBoost offers:
-
-Better regularization
-
-Boosting-based error correction
-
-Higher predictive power for complex datasets
-
-4. Model Training Strategy
-4.1 Stratified K-Fold Cross Validation
+### Stratified K-Fold Cross-Validation
 
 Instead of using a single train-validation split, the dataset was divided using:
 
 StratifiedKFold (5 folds)
 
-Why?
+This approach ensures:
+- Each fold maintains the original 60–40 class ratio.
+- Reduced variance in evaluation.
+- More reliable performance estimation.
+- Prevention of overfitting to a single split.
 
-Maintains the original 60–40 class ratio in each fold.
+---
 
-Reduces variance in performance estimates.
+## 5. Handling Class Imbalance
 
-Prevents overfitting to a single validation split.
-
-Produces more reliable performance metrics.
-
-This ensures the evaluation reflects real-world performance.
-
-5. Handling Class Imbalance
-
-XGBoost does not use class_weight like scikit-learn models.
+XGBoost does not use `class_weight` like some scikit-learn models.
 
 Instead, imbalance was handled using:
 
 scale_pos_weight = (number of negative samples) / (number of positive samples)
 
-Why this works:
+This technique:
+- Increases the penalty for misclassifying minority class samples.
+- Adjusts gradient updates during boosting.
+- Reduces bias toward the majority class.
 
-Increases penalty for misclassifying minority class.
+This improved recall and F1-score while maintaining stable probability outputs.
 
-Adjusts gradient updates during boosting.
+---
 
-Prevents bias toward majority class.
-
-This improves recall and F1-score without distorting probability estimates.
-
-6. Hyperparameter Optimization
+## 6. Hyperparameter Optimization
 
 A structured grid search was performed across:
 
-n_estimators
+- n_estimators  
+- learning_rate  
+- max_depth  
+- subsample  
+- colsample_bytree  
 
-learning_rate
+Each configuration was evaluated using:
+- Full cross-validation  
+- Global threshold optimization  
+- F1-score comparison  
 
-max_depth
+### Best Hyperparameters Found
 
-subsample
+n_estimators = 400  
+learning_rate = 0.05  
+max_depth = 7  
+subsample = 0.8  
+colsample_bytree = 0.8  
 
-colsample_bytree
+These parameters produced the highest cross-validated F1-score.
 
-Each combination was evaluated using:
+---
 
-Full cross-validation
+## 7. Global Threshold Optimization
 
-Global threshold optimization
+XGBoost outputs probabilities by default.
 
-F1-score comparison
+Although the standard classification threshold is 0.5, this is not always optimal in imbalanced scenarios.
 
-Best parameters found:
+To improve classification performance:
 
-n_estimators = 400
-learning_rate = 0.05
-max_depth = 7
-subsample = 0.8
-colsample_bytree = 0.8
+1. Out-of-fold validation probabilities were collected.  
+2. Thresholds from 0.1 to 0.9 were evaluated.  
+3. F1-score was computed for each threshold.  
+4. The threshold with the highest F1-score was selected.  
 
-These parameters provided the highest cross-validated F1-score.
-
-7. Global Threshold Optimization
-
-XGBoost outputs probabilities.
-
-By default, classification threshold = 0.5.
-
-However, 0.5 is not always optimal for imbalanced classification.
-
-Therefore:
-
-All out-of-fold validation probabilities were collected.
-
-A range of thresholds (0.1 to 0.9) was tested.
-
-F1-score was computed for each threshold.
-
-The threshold with maximum F1-score was selected.
-
-Best threshold found:
+### Best Threshold Found
 
 0.4
 
-This improved balance between precision and recall.
+This threshold improved the balance between precision and recall.
 
-8. Evaluation Metrics
+---
 
-Two key metrics were tracked:
+## 8. Evaluation Metrics
 
-F1-Score
+Two primary metrics were used:
 
-Measures balance between precision and recall.
+### F1-Score
+- Balances precision and recall.
+- Important for imbalanced classification.
 
-Especially important in imbalance scenarios.
+### ROC-AUC
+- Measures ranking capability of the model.
+- Independent of classification threshold.
+- Reflects class separability.
 
-ROC-AUC
+Tracking both metrics ensured strong ranking performance and optimal classification boundary selection.
 
-Measures ranking ability of model.
+---
 
-Independent of classification threshold.
-
-Reflects overall separability between classes.
-
-Using both metrics ensured:
-
-Strong ranking performance
-
-Optimal decision boundary
-
-9. Final Model Training
+## 9. Final Model Training
 
 After selecting:
+- Best hyperparameters  
+- Best threshold  
 
-Best hyperparameters
+The model was retrained on the entire training dataset to maximize learning before generating test predictions.
 
-Best threshold
+---
 
-The model was retrained on the entire training dataset.
+## 10. Submission File Generation
 
-This allows the model to:
+The test dataset contained an `ID` column not present in training.
 
-Learn from all available data
+To avoid feature mismatch:
 
-Maximize predictive power before test submission
+1. The `ID` column was separated.  
+2. Predictions were generated using only feature columns.  
+3. The final submission file was formatted as required:
 
-10. Submission File Generation
+ID,Class  
+1,1  
+2,0  
+3,0  
+4,1  
 
-The test dataset included an ID column not present in training.
+The row order was preserved exactly as in TEST.csv.
 
-To prevent feature mismatch:
+---
 
-ID column was separated.
+## 11. Key Design Decisions
 
-Predictions were generated using feature-only data.
+| Decision | Reason |
+|----------|--------|
+| XGBoost | High performance on structured data |
+| Stratified K-Fold | Reliable cross-validation |
+| scale_pos_weight | Proper imbalance handling |
+| Grid Search | Optimized model parameters |
+| Global Threshold Tuning | Improved F1-score |
+| Full Retraining | Maximum data utilization |
+| Separate ID Handling | Prevent feature mismatch |
 
-Final submission file was created in required format:
+---
 
-ID,Class
-1,1
-2,0
-3,0
-4,1
+## 12. Conclusion
 
-The order of rows was preserved exactly as in TEST.csv.
-
-11. Key Design Decisions
-Decision	Reason
-XGBoost	Best for tabular structured data
-Stratified K-Fold	Reliable validation
-scale_pos_weight	Proper imbalance handling
-Global threshold tuning	Optimized F1-score
-Full retraining	Maximum data utilization
-Separate ID handling	Prevent feature mismatch
-12. Conclusion
-
-This project demonstrates a structured and competition-grade approach to binary classification on tabular data.
+This project demonstrates a structured and competition-oriented approach to binary classification on tabular data.
 
 The solution emphasizes:
 
-Proper cross-validation
+- Proper cross-validation  
+- Imbalance handling  
+- Hyperparameter optimization  
+- Threshold calibration  
+- Clean submission formatting  
 
-Imbalance management
+Each modeling decision was validated through cross-validation rather than relying on default settings.
 
-Hyperparameter optimization
-
-Threshold calibration
-
-Clean submission formatting
-
-Rather than relying on default parameters, each modeling decision was intentional and validated through cross-validation results.
-
-The final pipeline ensures both robustness and reproducibility, aligning with best practices in applied machine learning.
+The final pipeline ensures robustness, reproducibility, and strong generalization performance, aligning with best practices in applied machine learning.

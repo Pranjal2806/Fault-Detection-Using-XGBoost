@@ -225,6 +225,24 @@ The row order was preserved exactly as in TEST.csv.
 
 ---
 
+## Setup Instructions
+
+
+1. Install required libraries:
+
+pip install pandas numpy scikit-learn xgboost
+
+---
+
+## Usage Instructions
+
+1. Place TRAIN.csv and TEST.csv in the root directory.
+2. Run the notebook or training script.
+3. The final prediction file FINAL.csv will be generated.
+
+
+---
+
 ## 12. Conclusion
 
 This project demonstrates a structured and competition-oriented approach to binary classification on tabular data.
